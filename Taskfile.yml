@@ -1,0 +1,18 @@
+version: '3'
+
+env:
+  BINARY_NAME: ricoh-supply-cli-go
+  LDFLAGS: -ldflags="-s -w"
+
+  BUILD_FILE: "./__dist/{{.BINARY_NAME}}.exe"
+  RELEASE_FILE: "./__dist/release/{{.BINARY_NAME}}.exe"
+
+tasks:
+  build:
+    cmds:
+      - go build -v {{.LDFLAGS}} -o {{.BUILD_FILE}}
+  release:
+    cmds:
+      - go build -v {{.LDFLAGS}} -o {{.RELEASE_FILE}}
+      - upx --best {{.RELEASE_FILE}}
+    ignore_error: true

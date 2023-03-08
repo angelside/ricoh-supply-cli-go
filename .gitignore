@@ -1,0 +1,8 @@
+.vscode/
+.idea/
+.fleet/
+dist/*
+bin/*
+*.exe
+*.so
+__*
