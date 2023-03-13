@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -39,9 +40,8 @@ func main() {
 	//ipAddr := "172.18.175.7"
 	ipAddr := os.Args[1]
 
-	valid_ip_address := validateIpAddress(ipAddr)
-	if !valid_ip_address {
-		fmt.Println("[ERROR] IP address is invalid!")
+	if err := validateIpAddress(ipAddr); err != nil {
+		fmt.Println(err)
 		os.Exit(0)
 	}
 
@@ -66,8 +66,11 @@ func main() {
 }
 
 // Validate ip address
-func validateIpAddress(ipAddress string) bool {
-	return net.ParseIP(ipAddress) != nil
+func validateIpAddress(ipAddress string) error {
+	if net.ParseIP(ipAddress) == nil {
+		return errors.New("[ERROR] IP address is invalid!")
+	}
+	return nil
 }
 
 // Draw progress bar
