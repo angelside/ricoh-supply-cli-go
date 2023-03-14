@@ -40,13 +40,15 @@ func main() {
 	ipAddr := os.Args[1]
 	if err := validateIpAddress(ipAddr); err != nil {
 		fmt.Println(err)
-		os.Exit(0)
+		//os.Exit(1)
+		return
 	}
 
 	//
 	// Data
 	//
 
+	// FIXME: Need error handling
 	supplyMap := func() map[string]int {
 		getStatus(ipAddr)
 		return makeSupplyMap()
@@ -125,12 +127,13 @@ FIXME: Where is the retry settings ?
 */
 
 // Depends: snmpConnection()
-func getStatus(ipAddr string) {
+func getStatus(ipAddr string) error {
 	var err error
 
 	if err = snmpConnection(ipAddr); err != nil {
 		fmt.Printf("[ERROR] Connection: %v\n", err)
-		os.Exit(1)
+		//os.Exit(1)
+		return err
 	}
 
 	defer gosnmp.Default.Conn.Close()
@@ -145,7 +148,8 @@ func getStatus(ipAddr string) {
 		return nil
 	}(); err != nil {
 		fmt.Printf("[ERROR] Unable to retrieve 'serial number': %v\n", err)
-		os.Exit(1)
+		//os.Exit(1)
+		return err
 	}
 
 	// Model name
@@ -158,7 +162,8 @@ func getStatus(ipAddr string) {
 		return nil
 	}(); err != nil {
 		fmt.Printf("[ERROR] Unable to retrieve 'model name': %v\n", err)
-		os.Exit(1)
+		//os.Exit(1)
+		return err
 	}
 
 	// Supply names
@@ -167,7 +172,8 @@ func getStatus(ipAddr string) {
 		return nil
 	}); err != nil {
 		fmt.Printf("[ERROR] Unable to retrieve 'supply names': %v\n", err)
-		os.Exit(1)
+		//os.Exit(1)
+		return err
 	}
 
 	// Supply levels
@@ -176,6 +182,9 @@ func getStatus(ipAddr string) {
 		return nil
 	}); err != nil {
 		fmt.Printf("[ERROR] Unable to retrieve 'supply levels': %v\n", err)
-		os.Exit(1)
+		//os.Exit(1)
+		return err
 	}
+
+	return nil
 }
