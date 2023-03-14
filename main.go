@@ -31,7 +31,6 @@ func main() {
 	//
 
 	filename := filepath.Base(os.Args[0])
-
 	if len(os.Args) != 2 {
 		fmt.Println("Usage:", filename, "IpAddress")
 		return
@@ -40,7 +39,6 @@ func main() {
 	ipAddr := os.Args[1]
 	if err := validateIpAddress(ipAddr); err != nil {
 		fmt.Println(err)
-		//os.Exit(1)
 		return
 	}
 
@@ -48,11 +46,13 @@ func main() {
 	// Data
 	//
 
-	// FIXME: Need error handling
-	supplyMap := func() map[string]int {
-		getStatus(ipAddr)
-		return makeSupplyMap()
-	}()
+	err := getStatus(ipAddr)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	supplyMap := makeSupplyMap()
 
 	fmt.Println("")
 	fmt.Printf("ip: %s - model: %s - serial: %s \n\n", ipAddr, modelName, serialNumber)
@@ -111,6 +111,7 @@ func makeSupplyMap() map[string]int {
 func snmpConnection(ipAddr string) error {
 	gosnmp.Default.Target = ipAddr
 	gosnmp.Default.Community = "public"
+	gosnmp.Default.Retries = 1
 	gosnmp.Default.Timeout = time.Duration(5 * time.Second) // Timeout better suited to walking
 
 	if err := gosnmp.Default.Connect(); err != nil {
@@ -120,20 +121,13 @@ func snmpConnection(ipAddr string) error {
 	return nil
 }
 
-/*
-192.168.0.1
-Walk Error: request timeout (after 3 retries)
-FIXME: Where is the retry settings ?
-*/
-
 // Depends: snmpConnection()
 func getStatus(ipAddr string) error {
 	var err error
 
 	if err = snmpConnection(ipAddr); err != nil {
-		fmt.Printf("[ERROR] Connection: %v\n", err)
-		//os.Exit(1)
-		return err
+		error := fmt.Sprintf("[ERROR] Connection: %v\n", err)
+		return errors.New(error)
 	}
 
 	defer gosnmp.Default.Conn.Close()
@@ -147,9 +141,8 @@ func getStatus(ipAddr string) error {
 		serialNumber = string(data.Variables[0].Value.([]byte))
 		return nil
 	}(); err != nil {
-		fmt.Printf("[ERROR] Unable to retrieve 'serial number': %v\n", err)
-		//os.Exit(1)
-		return err
+		error := fmt.Sprintf("[ERROR] Unable to retrieve 'serial number': %v\n", err)
+		return errors.New(error)
 	}
 
 	// Model name
@@ -161,9 +154,8 @@ func getStatus(ipAddr string) error {
 		modelName = string(data.Variables[0].Value.([]byte))
 		return nil
 	}(); err != nil {
-		fmt.Printf("[ERROR] Unable to retrieve 'model name': %v\n", err)
-		//os.Exit(1)
-		return err
+		error := fmt.Sprintf("[ERROR] Unable to retrieve 'model name': %v\n", err)
+		return errors.New(error)
 	}
 
 	// Supply names
@@ -171,9 +163,8 @@ func getStatus(ipAddr string) error {
 		supply_names = append(supply_names, string(pdu.Value.([]byte)))
 		return nil
 	}); err != nil {
-		fmt.Printf("[ERROR] Unable to retrieve 'supply names': %v\n", err)
-		//os.Exit(1)
-		return err
+		error := fmt.Sprintf("[ERROR] Unable to retrieve 'supply names': %v\n", err)
+		return errors.New(error)
 	}
 
 	// Supply levels
@@ -181,9 +172,8 @@ func getStatus(ipAddr string) error {
 		supply_levels = append(supply_levels, pdu.Value.(int))
 		return nil
 	}); err != nil {
-		fmt.Printf("[ERROR] Unable to retrieve 'supply levels': %v\n", err)
-		//os.Exit(1)
-		return err
+		error := fmt.Sprintf("[ERROR] Unable to retrieve 'supply levels': %v\n", err)
+		return errors.New(error)
 	}
 
 	return nil
