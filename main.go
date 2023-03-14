@@ -12,6 +12,7 @@ import (
 	gosnmp "github.com/gosnmp/gosnmp"
 )
 
+// Input variables
 var oid = map[string]string{
 	"modelName":    "1.3.6.1.2.1.43.5.1.1.16.1",
 	"serialNum":    "1.3.6.1.2.1.43.5.1.1.17.1",
@@ -19,9 +20,9 @@ var oid = map[string]string{
 	"supplyLevels": "1.3.6.1.2.1.43.11.1.1.9.1",
 }
 
-var supply_names = make([]string, 0, 4)
-var supply_levels = make([]int, 0, 4)
-
+// Output variables
+var supply_names = make([]string, 0, 4) // FIXME: CamelCase pls!
+var supply_levels = make([]int, 0, 4)   // FIXME: CamelCase pls!
 var modelName = "N/A"
 var serialNumber = "N/A"
 
@@ -30,12 +31,14 @@ func main() {
 	// Args
 	//
 
+	// Get filename and exit if there is no argument (ip address)
 	filename := filepath.Base(os.Args[0])
 	if len(os.Args) != 2 {
 		fmt.Println("Usage:", filename, "IpAddress")
 		return
 	}
 
+	// Get ip address from argument
 	ipAddr := os.Args[1]
 	if err := validateIpAddress(ipAddr); err != nil {
 		fmt.Println(err)
@@ -52,6 +55,7 @@ func main() {
 		return
 	}
 
+	// Merge supply_names and supply_levels and make a key=>value map
 	supplyMap := makeSupplyMap()
 
 	fmt.Println("")
@@ -94,6 +98,7 @@ func progressBar(text string, count int) string {
 	return fmt.Sprintf("[%s] %s %s\r", bar, percents, text)
 }
 
+// Merge supply_names and supply_levels and make a key=>value map
 func makeSupplyMap() map[string]int {
 	supplyMap := make(map[string]int)
 
@@ -111,7 +116,9 @@ func makeSupplyMap() map[string]int {
 func snmpConnection(ipAddr string) error {
 	gosnmp.Default.Target = ipAddr
 	gosnmp.Default.Community = "public"
+	// FIXME: Hard coded value
 	gosnmp.Default.Retries = 1
+	// FIXME: Hard coded value
 	gosnmp.Default.Timeout = time.Duration(5 * time.Second) // Timeout better suited to walking
 
 	if err := gosnmp.Default.Connect(); err != nil {
@@ -121,6 +128,7 @@ func snmpConnection(ipAddr string) error {
 	return nil
 }
 
+// Get serialNumber, modelName, supply_names, supply_levels
 // Depends: snmpConnection()
 func getStatus(ipAddr string) error {
 	var err error
