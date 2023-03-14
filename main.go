@@ -37,22 +37,16 @@ func main() {
 		return
 	}
 
-	//ipAddr := "172.18.175.7"
 	ipAddr := os.Args[1]
-
 	if err := validateIpAddress(ipAddr); err != nil {
 		fmt.Println(err)
 		os.Exit(0)
 	}
-	//log.Println("INFO: Valid IP address")
 
 	//
 	// Data
 	//
 
-	// Alternative
-	//getStatus(ipAddr)
-	//supplyMap := makeSupplyMap()
 	supplyMap := func() map[string]int {
 		getStatus(ipAddr)
 		return makeSupplyMap()
@@ -138,7 +132,6 @@ func getStatus(ipAddr string) {
 		fmt.Printf("[ERROR] Connection: %v\n", err)
 		os.Exit(1)
 	}
-	//log.Println("INFO: SNMP connection OK")
 
 	defer gosnmp.Default.Conn.Close()
 
