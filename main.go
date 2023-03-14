@@ -44,6 +44,7 @@ func main() {
 		fmt.Println(err)
 		os.Exit(0)
 	}
+	//log.Println("INFO: Valid IP address")
 
 	//
 	// Data
@@ -114,60 +115,74 @@ func makeSupplyMap() map[string]int {
 func snmpConnection(ipAddr string) error {
 	gosnmp.Default.Target = ipAddr
 	gosnmp.Default.Community = "public"
-	gosnmp.Default.Timeout = time.Duration(10 * time.Second) // Timeout better suited to walking
-	err := gosnmp.Default.Connect()
-	if err != nil {
-		fmt.Printf("Connect err: %v\n", err)
+	gosnmp.Default.Timeout = time.Duration(5 * time.Second) // Timeout better suited to walking
+
+	if err := gosnmp.Default.Connect(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
+/*
+192.168.0.1
+Walk Error: request timeout (after 3 retries)
+FIXME: Where is the retry settings ?
+*/
+
 // Depends: snmpConnection()
 func getStatus(ipAddr string) {
-	err := snmpConnection(ipAddr)
-	if err != nil {
-		fmt.Printf("Connect err: %v\n", err)
+	var err error
+
+	if err = snmpConnection(ipAddr); err != nil {
+		fmt.Printf("[ERROR] Connection: %v\n", err)
 		os.Exit(1)
 	}
+	//log.Println("INFO: SNMP connection OK")
 
 	defer gosnmp.Default.Conn.Close()
 
 	// Serial number / CxxxPxxxxxx
-	serialNumber, err = func() (string, error) {
+	if err := func() error {
 		data, err := gosnmp.Default.Get([]string{oid["serialNum"]})
 		if err != nil {
-			return "", err
+			return err
 		}
-		return string(data.Variables[0].Value.([]byte)), nil
-	}()
+		serialNumber = string(data.Variables[0].Value.([]byte))
+		return nil
+	}(); err != nil {
+		fmt.Printf("[ERROR] Unable to retrieve 'serial number': %v\n", err)
+		os.Exit(1)
+	}
 
-	// Model name / MP C307
-	modelName, err = func() (string, error) {
+	// Model name
+	if err = func() error {
 		data, err := gosnmp.Default.Get([]string{oid["modelName"]})
 		if err != nil {
-			return "", err
+			return err
 		}
-		return string(data.Variables[0].Value.([]byte)), nil
-	}()
+		modelName = string(data.Variables[0].Value.([]byte))
+		return nil
+	}(); err != nil {
+		fmt.Printf("[ERROR] Unable to retrieve 'model name': %v\n", err)
+		os.Exit(1)
+	}
 
 	// Supply names
-	err = gosnmp.Default.BulkWalk(oid["supplyNames"], func(pdu gosnmp.SnmpPDU) error {
+	if err = gosnmp.Default.BulkWalk(oid["supplyNames"], func(pdu gosnmp.SnmpPDU) error {
 		supply_names = append(supply_names, string(pdu.Value.([]byte)))
 		return nil
-	})
-	if err != nil {
-		fmt.Printf("Walk Error: %v\n", err)
+	}); err != nil {
+		fmt.Printf("[ERROR] Unable to retrieve 'supply names': %v\n", err)
 		os.Exit(1)
 	}
 
 	// Supply levels
-	err = gosnmp.Default.BulkWalk(oid["supplyLevels"], func(pdu gosnmp.SnmpPDU) error {
+	if err = gosnmp.Default.BulkWalk(oid["supplyLevels"], func(pdu gosnmp.SnmpPDU) error {
 		supply_levels = append(supply_levels, pdu.Value.(int))
 		return nil
-	})
-	if err != nil {
-		fmt.Printf("Walk Error: %v\n", err)
+	}); err != nil {
+		fmt.Printf("[ERROR] Unable to retrieve 'supply levels': %v\n", err)
 		os.Exit(1)
 	}
 }
