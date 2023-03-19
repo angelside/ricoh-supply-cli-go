@@ -73,7 +73,6 @@ func getArgs() (string, error) {
 	// Get ip address from argument
 	ipAddr := os.Args[1]
 	if err := validateIpAddress(ipAddr); err != nil {
-		//fmt.Println(err)
 		return "", err
 	}
 
@@ -103,8 +102,7 @@ func getStatus(ipAddr string) error {
 	var err error
 
 	if err = snmpConnection(ipAddr); err != nil {
-		error := fmt.Sprintf("[ERROR] Connection: %v\n", err)
-		return errors.New(error)
+		return fmt.Errorf("[ERROR] Connection: %v\n", err)
 	}
 
 	defer gosnmp.Default.Conn.Close()
@@ -118,8 +116,7 @@ func getStatus(ipAddr string) error {
 		serialNumber = string(data.Variables[0].Value.([]byte))
 		return nil
 	}(); err != nil {
-		error := fmt.Sprintf("[ERROR] Unable to retrieve 'serial number': %v\n", err)
-		return errors.New(error)
+		return fmt.Errorf("[ERROR] Unable to retrieve 'serial number': %v\n", err)
 	}
 
 	// Model name
@@ -131,8 +128,7 @@ func getStatus(ipAddr string) error {
 		modelName = string(data.Variables[0].Value.([]byte))
 		return nil
 	}(); err != nil {
-		error := fmt.Sprintf("[ERROR] Unable to retrieve 'model name': %v\n", err)
-		return errors.New(error)
+		return fmt.Errorf("[ERROR] Unable to retrieve 'model name': %v\n", err)
 	}
 
 	// Supply names
@@ -140,8 +136,7 @@ func getStatus(ipAddr string) error {
 		supplyNames = append(supplyNames, string(pdu.Value.([]byte)))
 		return nil
 	}); err != nil {
-		error := fmt.Sprintf("[ERROR] Unable to retrieve 'supply names': %v\n", err)
-		return errors.New(error)
+		return fmt.Errorf("[ERROR] Unable to retrieve 'supply names': %v\n", err)
 	}
 
 	// Supply levels
@@ -149,8 +144,7 @@ func getStatus(ipAddr string) error {
 		supplyLevels = append(supplyLevels, pdu.Value.(int))
 		return nil
 	}); err != nil {
-		error := fmt.Sprintf("[ERROR] Unable to retrieve 'supply levels': %v\n", err)
-		return errors.New(error)
+		return fmt.Errorf("[ERROR] Unable to retrieve 'supply levels': %v\n", err)
 	}
 
 	return nil
