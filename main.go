@@ -99,9 +99,7 @@ func snmpConnection(ipAddr string) error {
 // Get serialNumber, modelName, supplyNames, supplyLevels
 // Depends: snmpConnection()
 func getData(ipAddr string) error {
-	var err error
-
-	if err = snmpConnection(ipAddr); err != nil {
+	if err := snmpConnection(ipAddr); err != nil {
 		return fmt.Errorf("[ERROR] Connection: %v\n", err)
 	}
 
@@ -120,7 +118,7 @@ func getData(ipAddr string) error {
 	}
 
 	// Model name
-	if err = func() error {
+	if err := func() error {
 		data, err := gosnmp.Default.Get([]string{oid["modelName"]})
 		if err != nil {
 			return err
@@ -132,7 +130,7 @@ func getData(ipAddr string) error {
 	}
 
 	// Supply names
-	if err = gosnmp.Default.BulkWalk(oid["supplyNames"], func(pdu gosnmp.SnmpPDU) error {
+	if err := gosnmp.Default.BulkWalk(oid["supplyNames"], func(pdu gosnmp.SnmpPDU) error {
 		supplyNames = append(supplyNames, string(pdu.Value.([]byte)))
 		return nil
 	}); err != nil {
@@ -140,7 +138,7 @@ func getData(ipAddr string) error {
 	}
 
 	// Supply levels
-	if err = gosnmp.Default.BulkWalk(oid["supplyLevels"], func(pdu gosnmp.SnmpPDU) error {
+	if err := gosnmp.Default.BulkWalk(oid["supplyLevels"], func(pdu gosnmp.SnmpPDU) error {
 		supplyLevels = append(supplyLevels, pdu.Value.(int))
 		return nil
 	}); err != nil {
