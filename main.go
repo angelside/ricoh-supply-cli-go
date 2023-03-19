@@ -47,7 +47,7 @@ func main() {
 	// Data
 	//
 
-	if err := getStatus(ipAddr); err != nil {
+	if err := getData(ipAddr); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -98,7 +98,7 @@ func snmpConnection(ipAddr string) error {
 
 // Get serialNumber, modelName, supplyNames, supplyLevels
 // Depends: snmpConnection()
-func getStatus(ipAddr string) error {
+func getData(ipAddr string) error {
 	var err error
 
 	if err = snmpConnection(ipAddr); err != nil {
