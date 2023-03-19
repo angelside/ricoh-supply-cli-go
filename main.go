@@ -71,52 +71,9 @@ func main() {
 	}
 }
 
-// Validate ip address
-func validateIpAddress(ipAddress string) error {
-	if net.ParseIP(ipAddress) == nil {
-		return errors.New("[ERROR] IP address is invalid!")
-	}
-	return nil
-}
-
-// Draw progress bar
-func progressBar(text string, count int) string {
-	barLen := 40
-	total := 100
-	emptyFill := "-"
-	fill := "="
-
-	percents := ""
-
-	// -2 unknown toner
-	if count < 0 {
-		count = 0
-		percents = "N/A"
-		text = fmt.Sprintf("%s (Unknown toner)", text)
-	} else {
-		percents = fmt.Sprintf("%d%%", int64(100*count)/int64(total))
-	}
-
-	filledLen := int(float64(barLen) * float64(count) / float64(total))
-	bar := strings.Repeat(string(fill), filledLen) + strings.Repeat(string(emptyFill), barLen-filledLen)
-
-	return fmt.Sprintf("[%s] %s %s\r", bar, percents, text)
-}
-
-// Merge supplyNames and supplyLevels and make a key=>value map
-func makeSupplyMap() map[string]int {
-	supplyMap := make(map[string]int)
-
-	for i := 0; i < len(supplyNames); i++ {
-		supplyMap[supplyNames[i]] = supplyLevels[i]
-	}
-
-	// Delete waste toner
-	delete(supplyMap, "other")
-
-	// map[black:10 cyan:30 magenta:40 other:100 yellow:20]
-	return supplyMap
-}
+//
+// SNMP
+//
 
 func snmpConnection(ipAddr string) error {
 	gosnmp.Default.Target = ipAddr
@@ -188,4 +145,55 @@ func getStatus(ipAddr string) error {
 	}
 
 	return nil
+}
+
+//
+// Utils
+//
+
+// Merge supplyNames and supplyLevels and make a key=>value map
+func makeSupplyMap() map[string]int {
+	supplyMap := make(map[string]int)
+
+	for i := 0; i < len(supplyNames); i++ {
+		supplyMap[supplyNames[i]] = supplyLevels[i]
+	}
+
+	// Delete waste toner
+	delete(supplyMap, "other")
+
+	// map[black:10 cyan:30 magenta:40 other:100 yellow:20]
+	return supplyMap
+}
+
+// Validate ip address
+func validateIpAddress(ipAddress string) error {
+	if net.ParseIP(ipAddress) == nil {
+		return errors.New("[ERROR] IP address is invalid!")
+	}
+	return nil
+}
+
+// Draw progress bar
+func progressBar(text string, count int) string {
+	barLen := 40
+	total := 100
+	emptyFill := "-"
+	fill := "="
+
+	percents := ""
+
+	// -2 unknown toner
+	if count < 0 {
+		count = 0
+		percents = "N/A"
+		text = fmt.Sprintf("%s (Unknown toner)", text)
+	} else {
+		percents = fmt.Sprintf("%d%%", int64(100*count)/int64(total))
+	}
+
+	filledLen := int(float64(barLen) * float64(count) / float64(total))
+	bar := strings.Repeat(string(fill), filledLen) + strings.Repeat(string(emptyFill), barLen-filledLen)
+
+	return fmt.Sprintf("[%s] %s %s\r", bar, percents, text)
 }
