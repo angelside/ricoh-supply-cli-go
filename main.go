@@ -36,16 +36,9 @@ func main() {
 	// Args
 	//
 
-	// Get filename and exit if there is no argument (ip address)
-	filename := filepath.Base(os.Args[0])
-	if len(os.Args) != 2 {
-		fmt.Println("Usage:", filename, "IpAddress")
-		return
-	}
-
-	// Get ip address from argument
-	ipAddr := os.Args[1]
-	if err := validateIpAddress(ipAddr); err != nil {
+	// Get ip address from argument and valitade ip adress
+	ipAddr, err := getArgs()
+	if err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -54,8 +47,7 @@ func main() {
 	// Data
 	//
 
-	err := getStatus(ipAddr)
-	if err != nil {
+	if err := getStatus(ipAddr); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -69,6 +61,23 @@ func main() {
 	for name, value := range supplyMap {
 		fmt.Println(progressBar(name, value))
 	}
+}
+
+func getArgs() (string, error) {
+	// Get filename and exit if there is no argument (ip address)
+	filename := filepath.Base(os.Args[0])
+	if len(os.Args) != 2 {
+		return "", fmt.Errorf("Usage: %s IpAddress", filename)
+	}
+
+	// Get ip address from argument
+	ipAddr := os.Args[1]
+	if err := validateIpAddress(ipAddr); err != nil {
+		//fmt.Println(err)
+		return "", err
+	}
+
+	return ipAddr, nil
 }
 
 //
