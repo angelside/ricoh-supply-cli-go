@@ -12,6 +12,11 @@ import (
 	gosnmp "github.com/gosnmp/gosnmp"
 )
 
+var snmp = map[string]interface{}{
+	"retry":   1,
+	"timeout": 5 * time.Second,
+}
+
 // Input variables
 var oid = map[string]string{
 	"modelName":    "1.3.6.1.2.1.43.5.1.1.16.1",
@@ -21,8 +26,8 @@ var oid = map[string]string{
 }
 
 // Output variables
-var supply_names = make([]string, 0, 4) // FIXME: CamelCase pls!
-var supply_levels = make([]int, 0, 4)   // FIXME: CamelCase pls!
+var supplyNames = make([]string, 0, 4)
+var supplyLevels = make([]int, 0, 4)
 var modelName = "N/A"
 var serialNumber = "N/A"
 
@@ -55,7 +60,7 @@ func main() {
 		return
 	}
 
-	// Merge supply_names and supply_levels and make a key=>value map
+	// Merge supplyNames and supplyLevels and make a key=>value map
 	supplyMap := makeSupplyMap()
 
 	fmt.Println("")
@@ -98,12 +103,12 @@ func progressBar(text string, count int) string {
 	return fmt.Sprintf("[%s] %s %s\r", bar, percents, text)
 }
 
-// Merge supply_names and supply_levels and make a key=>value map
+// Merge supplyNames and supplyLevels and make a key=>value map
 func makeSupplyMap() map[string]int {
 	supplyMap := make(map[string]int)
 
-	for i := 0; i < len(supply_names); i++ {
-		supplyMap[supply_names[i]] = supply_levels[i]
+	for i := 0; i < len(supplyNames); i++ {
+		supplyMap[supplyNames[i]] = supplyLevels[i]
 	}
 
 	// Delete waste toner
@@ -116,10 +121,8 @@ func makeSupplyMap() map[string]int {
 func snmpConnection(ipAddr string) error {
 	gosnmp.Default.Target = ipAddr
 	gosnmp.Default.Community = "public"
-	// FIXME: Hard coded value
-	gosnmp.Default.Retries = 1
-	// FIXME: Hard coded value
-	gosnmp.Default.Timeout = time.Duration(5 * time.Second) // Timeout better suited to walking
+	gosnmp.Default.Retries = snmp["retry"].(int)
+	gosnmp.Default.Timeout = time.Duration(snmp["timeout"].(time.Duration)) // Timeout better suited to walking
 
 	if err := gosnmp.Default.Connect(); err != nil {
 		return err
@@ -128,7 +131,7 @@ func snmpConnection(ipAddr string) error {
 	return nil
 }
 
-// Get serialNumber, modelName, supply_names, supply_levels
+// Get serialNumber, modelName, supplyNames, supplyLevels
 // Depends: snmpConnection()
 func getStatus(ipAddr string) error {
 	var err error
@@ -168,7 +171,7 @@ func getStatus(ipAddr string) error {
 
 	// Supply names
 	if err = gosnmp.Default.BulkWalk(oid["supplyNames"], func(pdu gosnmp.SnmpPDU) error {
-		supply_names = append(supply_names, string(pdu.Value.([]byte)))
+		supplyNames = append(supplyNames, string(pdu.Value.([]byte)))
 		return nil
 	}); err != nil {
 		error := fmt.Sprintf("[ERROR] Unable to retrieve 'supply names': %v\n", err)
@@ -177,7 +180,7 @@ func getStatus(ipAddr string) error {
 
 	// Supply levels
 	if err = gosnmp.Default.BulkWalk(oid["supplyLevels"], func(pdu gosnmp.SnmpPDU) error {
-		supply_levels = append(supply_levels, pdu.Value.(int))
+		supplyLevels = append(supplyLevels, pdu.Value.(int))
 		return nil
 	}); err != nil {
 		error := fmt.Sprintf("[ERROR] Unable to retrieve 'supply levels': %v\n", err)
