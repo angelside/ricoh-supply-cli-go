@@ -1,4 +1,4 @@
-module app
+module github.com/angelside/ricoh-supply-cli-go
 
 go 1.20
 
