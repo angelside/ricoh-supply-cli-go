@@ -36,7 +36,7 @@ func main() {
 	// Args
 	//
 
-	// Get ip address from argument and valitade ip adress
+	// Get ip address from argument and valitade ip address
 	ipAddr, err := getArgs()
 	if err != nil {
 		fmt.Println(err)
