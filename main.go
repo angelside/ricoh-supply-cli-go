@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -30,6 +29,20 @@ var supplyNames = make([]string, 0, 4)
 var supplyLevels = make([]int, 0, 4)
 var modelName = "N/A"
 var serialNumber = "N/A"
+
+// Error messages
+// errorMsg["serialNum"]
+var errorMsg = map[string]string{
+	// General / fmt.Errorf
+	"cliUsage":  "Usage: %s IpAddress",
+	"invalidIp": "[ERROR] Invalid IP address: %s",
+	// SNMP / fmt.Errorf
+	"connection":   "[ERROR] Connection: %v\n",
+	"serialNum":    "[ERROR] Unable to retrieve 'serial number': %v\n",
+	"modelName":    "[ERROR] Unable to retrieve 'model name': %v\n",
+	"supplyNames":  "[ERROR] Unable to retrieve 'supply names': %v\n",
+	"supplyLevels": "[ERROR] Unable to retrieve 'supply levels': %v\n",
+}
 
 func main() {
 	//
@@ -74,7 +87,7 @@ func getArgs() (string, error) {
 	// Get filename and exit if there is no argument
 	filename := filepath.Base(os.Args[0])
 	if len(os.Args) != 2 {
-		return "", fmt.Errorf("Usage: %s IpAddress", filename)
+		return "", fmt.Errorf(errorMsg["cliUsage"], filename)
 	}
 
 	// Get ip address from argument
@@ -104,7 +117,7 @@ func snmpConnection(ipAddr string) error {
 // Depends: snmpConnection()
 func getData(ipAddr string) error {
 	if err := snmpConnection(ipAddr); err != nil {
-		return fmt.Errorf("[ERROR] Connection: %v\n", err)
+		return fmt.Errorf(errorMsg["connection"], err)
 	}
 
 	defer gosnmp.Default.Conn.Close()
@@ -118,7 +131,7 @@ func getData(ipAddr string) error {
 		serialNumber = string(data.Variables[0].Value.([]byte))
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("[ERROR] Unable to retrieve 'serial number': %v\n", err)
+		return fmt.Errorf(errorMsg["serialNum"], err)
 	}
 
 	// Model name
@@ -130,7 +143,7 @@ func getData(ipAddr string) error {
 		modelName = string(data.Variables[0].Value.([]byte))
 		return nil
 	}(); err != nil {
-		return fmt.Errorf("[ERROR] Unable to retrieve 'model name': %v\n", err)
+		return fmt.Errorf(errorMsg["modelName"], err)
 	}
 
 	// Supply names
@@ -138,7 +151,7 @@ func getData(ipAddr string) error {
 		supplyNames = append(supplyNames, string(pdu.Value.([]byte)))
 		return nil
 	}); err != nil {
-		return fmt.Errorf("[ERROR] Unable to retrieve 'supply names': %v\n", err)
+		return fmt.Errorf(errorMsg["supplyNames"], err)
 	}
 
 	// Supply levels
@@ -146,7 +159,7 @@ func getData(ipAddr string) error {
 		supplyLevels = append(supplyLevels, pdu.Value.(int))
 		return nil
 	}); err != nil {
-		return fmt.Errorf("[ERROR] Unable to retrieve 'supply levels': %v\n", err)
+		return fmt.Errorf(errorMsg["supplyLevels"], err)
 	}
 
 	return nil
@@ -174,7 +187,7 @@ func makeSupplyMap() map[string]int {
 // Validate ip address
 func validateIpAddress(ipAddress string) error {
 	if net.ParseIP(ipAddress) == nil {
-		return errors.New("[ERROR] IP address is invalid!")
+		return fmt.Errorf(errorMsg["invalidIp"], ipAddress)
 	}
 	return nil
 }
