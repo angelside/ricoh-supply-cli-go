@@ -36,9 +36,15 @@ func main() {
 	// Args
 	//
 
-	// Get ip address from argument and valitade ip address
+	// Get ip address from argument
 	ipAddr, err := getArgs()
 	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Valitade ip address
+	if err := validateIpAddress(ipAddr); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -63,8 +69,9 @@ func main() {
 	}
 }
 
+// Get ip address from argument
 func getArgs() (string, error) {
-	// Get filename and exit if there is no argument (ip address)
+	// Get filename and exit if there is no argument
 	filename := filepath.Base(os.Args[0])
 	if len(os.Args) != 2 {
 		return "", fmt.Errorf("Usage: %s IpAddress", filename)
@@ -72,9 +79,6 @@ func getArgs() (string, error) {
 
 	// Get ip address from argument
 	ipAddr := os.Args[1]
-	if err := validateIpAddress(ipAddr); err != nil {
-		return "", err
-	}
 
 	return ipAddr, nil
 }
