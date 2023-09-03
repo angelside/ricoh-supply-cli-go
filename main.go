@@ -56,7 +56,7 @@ func main() {
 		return
 	}
 
-	// Valitade ip address
+	// Validate ip address
 	if err := validateIpAddress(ipAddr); err != nil {
 		fmt.Println(err)
 		return
