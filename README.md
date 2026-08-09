@@ -1,3 +1,5 @@
+
+
 # Ricoh Supply CLI
 
 [![maintenance-status](https://img.shields.io/badge/maintenance-as--is-yellow.svg?style=for-the-badge)](https://gist.github.com/angelside/364976fbcf7001a5da7e79ad8ed91fec)
@@ -20,8 +22,6 @@ The following command will build the binaries and save them in the `./__dist/` d
 > cd ricoh-supply-cli-go
 > task build
 ```
-
-> ⚠️TODO: Taskfile.yml for Linux
 
 ## 🔨 Usage
 
